@@ -48,7 +48,8 @@ scripts/                 # PIL 아이콘/OG/스플래시 (영수증 지그재그
 ## 핵심 로직
 
 - **저장 이원화**: 메타는 `receipt-app-v1`(localStorage 단일 키, 상한 1000건), 사진은 imageDB(IndexedDB, key=record.id). 등록 시 `resizeImage`로 긴 변 1200px·JPEG q0.8 축소(장당 수백 KB). 삭제 시 양쪽 모두 제거.
-- **등록 흐름** (`App.addFiles`): 이미지 파일마다 리사이즈→IDB→레코드 생성. **1장이면 바로 편집 화면**으로(현장 UX), 여러 장이면 목록에 쌓고 나중에 채움.
+- **등록 흐름** (`App.startCreate`→`createRecord`): 사진은 **한 장씩만**(자동 인식이 없으므로 배치 무의미 — 여러 장이 와도 첫 장만 열고 안내). 사진 선택 시 리사이즈해 pendingBlob으로만 들고 편집 화면으로 — **저장을 눌러야 레코드·IDB 생성**, 취소하면 아무것도 안 남는다(빈 레코드 양산 방지, 마스터 지적 2026-07-23). 날짜 기본값은 `todayLocal()` — toISOString은 UTC라 자정 전후 하루 밀림.
+- **AI 부재 설명 카드** (`EditView` 신규 모드): "만들어 실험했으나 검증 후 껐다"를 앱 안에서 설명 + 온디바이스 AI 데모 링크 — AI 연동 가능성 인지가 목적(마스터 지시 2026-07-23).
 - **집계** (`receipts.summarize`): date의 YYYY-MM 기준 월 필터 + 분류별 합계. StatsView 막대는 최대값 대비 비율.
 - **CSV**: `﻿` BOM + CRLF + 전체 필드 쿼팅 — 한글 엑셀 호환. 다운로드는 Blob objectURL.
 - **PWA**: 앱 셸만 프리캐시 — 사용자 데이터는 어차피 로컬이라 오프라인 완결.

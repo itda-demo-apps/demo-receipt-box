@@ -2,13 +2,13 @@ import { useMemo, useState } from "react";
 
 import Header from "../components/Header";
 import { CATS, CAT_BY_ID } from "../data/defaults";
-import { summarize, monthOf, fmtWon, exportCSV } from "../receipts";
+import { summarize, monthOf, fmtWon, exportCSV, todayLocal } from "../receipts";
 
 export default function StatsView({ view, setView, records }) {
   // 기록이 있는 월 목록(최신순), 기본은 이번 달
   const months = useMemo(() => {
     const set = new Set(records.map(monthOf).filter(Boolean));
-    set.add(new Date().toISOString().slice(0, 7));
+    set.add(todayLocal().slice(0, 7));
     return [...set].sort().reverse();
   }, [records]);
   const [month, setMonth] = useState(months[0]);

@@ -645,3 +645,30 @@ button {
 .ai-note--warn {
   color: #e8b93e;
 }
+
+.dz-notice {
+  text-align: center;
+  font-size: 12.5px;
+  color: #e8b93e;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+/* AI 자동 인식이 없는 이유 설명 — "만들었는데 검증 후 껐다"를 앱 안에서 전달 */
+.ai-why {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.ai-why b {
+  color: var(--text);
+}
+
+.ai-why a {
+  color: var(--text);
+}

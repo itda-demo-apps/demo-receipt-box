@@ -7,16 +7,17 @@ import Thumb from "../components/Thumb";
 import { CAT_BY_ID } from "../data/defaults";
 import { fmtWon } from "../receipts";
 
-export default function HomeView({ view, setView, records, addFiles, addManual, openEdit }) {
+export default function HomeView({ view, setView, records, startCreate, openEdit }) {
   const [dragOver, setDragOver] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
   const fileRef = useRef(null);
 
-  const handleFiles = async (files) => {
-    if (!files?.length || busy) return;
-    setBusy(true);
-    await addFiles(files);
-    setBusy(false);
+  // 자동 인식이 없으므로 한 장씩 — 여러 장이 와도 첫 장만 열고 안내한다
+  const handleFiles = (files) => {
+    const images = [...(files || [])].filter((f) => f.type.startsWith("image/"));
+    if (!images.length) return;
+    setNotice(images.length > 1 ? "자동 인식 기능이 없어 한 장씩 입력해요 — 첫 장을 열었어요" : "");
+    startCreate(images[0]);
   };
 
   const onDrop = (e) => {
@@ -30,7 +31,7 @@ export default function HomeView({ view, setView, records, addFiles, addManual, 
       <Header view={view} setView={setView} />
       <InstallHint />
 
-      {/* 드롭존 — 사진을 끌어다 놓거나 탭해서 촬영/선택 */}
+      {/* 드롭존 — 사진 한 장 → 편집 화면에서 입력 후 저장해야 등록된다 */}
       <button
         className={`dropzone ${dragOver ? "dropzone--over" : ""}`}
         onClick={() => fileRef.current?.click()}
@@ -42,21 +43,23 @@ export default function HomeView({ view, setView, records, addFiles, addManual, 
         onDrop={onDrop}
       >
         <span className="dropzone-icon">🧾</span>
-        <span className="dropzone-main">{busy ? "등록 중..." : "영수증 사진을 끌어다 놓으세요"}</span>
-        <span className="dropzone-sub">탭하면 촬영·앨범 선택 — 여러 장 한 번에 가능</span>
+        <span className="dropzone-main">영수증 사진 한 장을 올리고 바로 입력하세요</span>
+        <span className="dropzone-sub">
+          사진은 증빙 보관용 — 내용(상호·금액)은 직접 입력해요 (자동 인식 없음)
+        </span>
       </button>
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
-        multiple
         hidden
         onChange={(e) => {
           handleFiles(e.target.files);
           e.target.value = "";
         }}
       />
-      <button className="btn manual-btn" onClick={addManual}>
+      {notice && <div className="dz-notice">{notice}</div>}
+      <button className="btn manual-btn" onClick={() => startCreate(null)}>
         사진 없이 직접 입력
       </button>
 

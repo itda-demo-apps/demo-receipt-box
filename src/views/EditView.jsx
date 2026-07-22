@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Header from "../components/Header";
 import Thumb from "../components/Thumb";
 import { CATS } from "../data/defaults";
+import { todayLocal } from "../receipts";
 
-export default function EditView({ view, setView, record, patchRecord, deleteRecord }) {
+// 신규 등록(record 없음 — pendingBlob 미리보기, 저장해야 등록)과 기존 편집(record 있음)을 겸한다
+export default function EditView({
+  view,
+  setView,
+  record,
+  pendingBlob,
+  createRecord,
+  patchRecord,
+  deleteRecord,
+  closeEdit,
+}) {
+  const isNew = !record;
   const [form, setForm] = useState({
-    date: record.date,
-    store: record.store,
-    amount: record.amount || "",
-    cat: record.cat,
-    memo: record.memo,
+    date: record?.date || todayLocal(),
+    store: record?.store || "",
+    amount: record?.amount || "",
+    cat: record?.cat || "meal",
+    memo: record?.memo || "",
   });
   const [saved, setSaved] = useState(false);
+
+  // 신규 사진 미리보기용 objectURL
+  const pendingUrl = useMemo(() => (pendingBlob ? URL.createObjectURL(pendingBlob) : null), [pendingBlob]);
+  useEffect(() => () => pendingUrl && URL.revokeObjectURL(pendingUrl), [pendingUrl]);
 
   const set = (k, v) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -20,7 +36,12 @@ export default function EditView({ view, setView, record, patchRecord, deleteRec
   };
 
   const save = async () => {
-    await patchRecord(record.id, { ...form, amount: Number(form.amount) || 0 });
+    const data = { ...form, amount: Number(form.amount) || 0 };
+    if (isNew) {
+      await createRecord(data, pendingBlob); // 저장 시에만 레코드 생성 — 이후 홈으로
+      return;
+    }
+    await patchRecord(record.id, data);
     setSaved(true);
   };
 
@@ -32,12 +53,35 @@ export default function EditView({ view, setView, record, patchRecord, deleteRec
     <div className="app">
       <Header view={view} setView={setView} />
 
-      <button className="btn back-btn" onClick={() => setView("home")}>
-        ← 목록으로
+      <button className="btn back-btn" onClick={closeEdit}>
+        {isNew ? "← 취소 (저장 안 함)" : "← 목록으로"}
       </button>
 
       <div className="edit-photo">
-        <Thumb id={record.id} hasImage={record.hasImage} large />
+        {isNew ? (
+          pendingUrl ? (
+            <img className="thumb thumb--large" src={pendingUrl} alt="영수증" />
+          ) : (
+            <span className="thumb thumb--large thumb--empty">🧾</span>
+          )
+        ) : (
+          <Thumb id={record.id} hasImage={record.hasImage} large />
+        )}
+        {isNew && (
+          <div className="ai-note ai-note--warn">사진을 보며 아래 내용을 입력하고 저장해야 등록돼요</div>
+        )}
+        {isNew && (
+          <div className="ai-why">
+            <b>✨ AI 자동 인식은 왜 없나요?</b> 브라우저 내장 AI(Gemini Nano)로 사진에서 금액을 자동
+            추출하는 기능을 만들어 실험했지만, 실제 영수증 검증에서 인식 정확도가 기준에 못 미쳐{" "}
+            <b>일부러 껐습니다</b>. 온디바이스 AI 모델이 더 정확해지면 다시 켤 예정이에요 — 내 기기의 AI
+            지원 상태는{" "}
+            <a href="https://itda-demo-ondevice-ai.vercel.app" target="_blank" rel="noreferrer">
+              온디바이스 AI 데모
+            </a>
+            에서 확인할 수 있습니다.
+          </div>
+        )}
       </div>
 
       <div className="edit-form">
@@ -96,11 +140,13 @@ export default function EditView({ view, setView, record, patchRecord, deleteRec
       </div>
 
       <button className="btn save-btn" onClick={save}>
-        {saved ? "저장됐어요 ✓" : "저장"}
+        {isNew ? "저장하고 등록" : saved ? "저장됐어요 ✓" : "저장"}
       </button>
-      <button className="btn delete-btn" onClick={remove}>
-        삭제
-      </button>
+      {!isNew && (
+        <button className="btn delete-btn" onClick={remove}>
+          삭제
+        </button>
+      )}
     </div>
   );
 }

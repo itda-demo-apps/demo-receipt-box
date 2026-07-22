@@ -7,6 +7,12 @@ const LIMIT = 1000;
 
 // record: {id, date(YYYY-MM-DD), store, amount(원), cat, memo, hasImage, ts(등록시각)}
 
+// 로컬(KST) 기준 오늘 — toISOString()은 UTC라 자정 전후로 하루 밀린다
+export function todayLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export async function loadRecords() {
   try {
     const saved = await storage.get(APP_KEY);
@@ -27,7 +33,7 @@ export async function addRecord(partial) {
   const records = await loadRecords();
   const rec = {
     id: `r${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    date: new Date().toISOString().slice(0, 10),
+    date: todayLocal(),
     store: "",
     amount: 0,
     cat: "meal",
