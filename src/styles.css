@@ -641,3 +641,7 @@ button {
   font-weight: 700;
   color: var(--text);
 }
+
+.ai-note--warn {
+  color: #e8b93e;
+}

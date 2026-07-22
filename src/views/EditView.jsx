@@ -41,7 +41,8 @@ export default function EditView({ view, setView, record, hasAI, patchRecord, de
         ...f,
         date: out.date || f.date,
         store: out.store || f.store,
-        amount: out.amount || f.amount,
+        // 금액은 모델이 "확실히 읽음"(>0)일 때만 채운다 — 오독이 제일 위험한 필드
+        amount: out.amount > 0 ? out.amount : f.amount,
         cat: CATS.some((c) => c.id === out.cat) ? out.cat : f.cat,
       }));
       setAiState("done");
@@ -63,10 +64,14 @@ export default function EditView({ view, setView, record, hasAI, patchRecord, de
         <Thumb id={record.id} hasImage={record.hasImage} large />
         {record.hasImage && hasAI && (
           <button className="btn ai-btn" disabled={aiState === "running"} onClick={aiRead}>
-            {aiState === "running" ? "읽는 중... (기기 안에서)" : "✨ AI로 읽기 — 사진에서 자동 입력"}
+            {aiState === "running" ? "읽는 중... (기기 안에서)" : "✨ AI로 읽기 (베타) — 사진에서 자동 입력"}
           </button>
         )}
-        {aiState === "done" && <div className="ai-note ai-note--ok">읽었어요 — 내용을 확인·수정 후 저장하세요</div>}
+        {aiState === "done" && (
+          <div className="ai-note ai-note--warn">
+            ⚠️ 자동 인식은 틀릴 수 있어요 — 특히 <b>금액</b>을 영수증과 꼭 대조하세요
+          </div>
+        )}
         {aiState === "error" && <div className="ai-note ai-note--err">읽기에 실패했어요 — 직접 입력해 주세요</div>}
       </div>
 
