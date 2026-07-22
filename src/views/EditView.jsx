@@ -3,10 +3,8 @@ import { useState } from "react";
 import Header from "../components/Header";
 import Thumb from "../components/Thumb";
 import { CATS } from "../data/defaults";
-import { imageDB } from "../db";
-import { readReceipt } from "../ai";
 
-export default function EditView({ view, setView, record, hasAI, patchRecord, deleteRecord }) {
+export default function EditView({ view, setView, record, patchRecord, deleteRecord }) {
   const [form, setForm] = useState({
     date: record.date,
     store: record.store,
@@ -14,7 +12,6 @@ export default function EditView({ view, setView, record, hasAI, patchRecord, de
     cat: record.cat,
     memo: record.memo,
   });
-  const [aiState, setAiState] = useState("idle"); // idle | running | done | error
   const [saved, setSaved] = useState(false);
 
   const set = (k, v) => {
@@ -31,27 +28,6 @@ export default function EditView({ view, setView, record, hasAI, patchRecord, de
     if (window.confirm("이 영수증을 삭제할까요? 사진도 함께 지워져요.")) deleteRecord(record.id);
   };
 
-  // AI로 읽기 — 온디바이스 멀티모달로 사진에서 날짜·상호·금액·분류 추출 후 폼 프리필
-  const aiRead = async () => {
-    setAiState("running");
-    try {
-      const blob = await imageDB.get(record.id);
-      const out = await readReceipt(blob);
-      setForm((f) => ({
-        ...f,
-        date: out.date || f.date,
-        store: out.store || f.store,
-        // 금액은 모델이 "확실히 읽음"(>0)일 때만 채운다 — 오독이 제일 위험한 필드
-        amount: out.amount > 0 ? out.amount : f.amount,
-        cat: CATS.some((c) => c.id === out.cat) ? out.cat : f.cat,
-      }));
-      setAiState("done");
-      setSaved(false);
-    } catch {
-      setAiState("error");
-    }
-  };
-
   return (
     <div className="app">
       <Header view={view} setView={setView} />
@@ -62,17 +38,6 @@ export default function EditView({ view, setView, record, hasAI, patchRecord, de
 
       <div className="edit-photo">
         <Thumb id={record.id} hasImage={record.hasImage} large />
-        {record.hasImage && hasAI && (
-          <button className="btn ai-btn" disabled={aiState === "running"} onClick={aiRead}>
-            {aiState === "running" ? "읽는 중... (기기 안에서)" : "✨ AI로 읽기 (베타) — 사진에서 자동 입력"}
-          </button>
-        )}
-        {aiState === "done" && (
-          <div className="ai-note ai-note--warn">
-            ⚠️ 자동 인식은 틀릴 수 있어요 — 특히 <b>금액</b>을 영수증과 꼭 대조하세요
-          </div>
-        )}
-        {aiState === "error" && <div className="ai-note ai-note--err">읽기에 실패했어요 — 직접 입력해 주세요</div>}
       </div>
 
       <div className="edit-form">

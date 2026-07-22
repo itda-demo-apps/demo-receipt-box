@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import { loadRecords, addRecord, updateRecord, removeRecord } from "./receipts";
 import { imageDB, resizeImage } from "./db";
-import { aiAvailable } from "./ai";
 import HomeView from "./views/HomeView";
 import EditView from "./views/EditView";
 import StatsView from "./views/StatsView";
@@ -13,13 +12,11 @@ export default function App() {
   const [view, setView] = useState("home"); // home | edit | stats | contact
   const [editId, setEditId] = useState(null);
   const [records, setRecords] = useState([]);
-  const [hasAI, setHasAI] = useState(false);
 
   useEffect(() => {
     (async () => {
       setRecords(await loadRecords());
       setReady(true);
-      setHasAI(await aiAvailable()); // 늦게 와도 무방 — 버튼만 늦게 뜬다
     })();
   }, []);
 
@@ -65,15 +62,7 @@ export default function App() {
   if (view === "edit" && editId) {
     const rec = records.find((r) => r.id === editId);
     if (rec)
-      return (
-        <EditView
-          {...shared}
-          record={rec}
-          hasAI={hasAI}
-          patchRecord={patchRecord}
-          deleteRecord={deleteRecord}
-        />
-      );
+      return <EditView {...shared} record={rec} patchRecord={patchRecord} deleteRecord={deleteRecord} />;
   }
   if (view === "stats") return <StatsView {...shared} records={records} />;
   if (view === "contact") return <ContactView {...shared} />;
