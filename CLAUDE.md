@@ -45,6 +45,18 @@ api/contact.js           # 문의 폼 → Telegram
 scripts/                 # PIL 아이콘/OG/스플래시 (영수증 지그재그 도안)
 ```
 
+## URL 라우팅
+
+`src/router.js`(의존성 없는 history API — `parseLocation`·`navigate`·`useRoute`)가 화면 상태의 진실 소스. `vercel.json`이 SPA 딥링크를 `index.html`로 리라이트한다.
+
+| 경로 | 화면 |
+|---|---|
+| `/` | 목록(홈) |
+| `/new` | 신규 등록 — pendingBlob은 메모리라 새로고침 시 사진만 소실(폼은 유지) |
+| `/edit/:recordId` | 편집 — localStorage 레코드, 새로고침 복원. 없는 id는 홈으로 |
+| `/stats` | 집계 |
+| `/contact` | 문의 |
+
 ## 핵심 로직
 
 - **저장 이원화**: 메타는 `receipt-app-v1`(localStorage 단일 키, 상한 1000건), 사진은 imageDB(IndexedDB, key=record.id). 등록 시 `resizeImage`로 긴 변 1200px·JPEG q0.8 축소(장당 수백 KB). 삭제 시 양쪽 모두 제거.
