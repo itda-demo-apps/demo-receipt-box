@@ -1,3 +1,5 @@
+import { navigate } from "../router";
+
 export default function Header({ view, setView }) {
   const tabs = [
     { id: "home", label: "영수증" },
@@ -7,9 +9,9 @@ export default function Header({ view, setView }) {
   const active = view === "edit" ? "home" : view; // 편집은 영수증 탭의 하위 화면
   return (
     <div className="header">
-      <div className="display header-logo">
+      <button className="btn header-logo-btn display header-logo" onClick={() => navigate("/")}>
         영수증 <span className="accent">정리함</span>
-      </div>
+      </button>
       <nav className="header-tabs">
         {tabs.map((t) => (
           <button
